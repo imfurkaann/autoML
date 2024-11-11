@@ -1,0 +1,96 @@
+{% extends 'layout.html' %}
+{% block title %}Inputs{% endblock title %}
+{% block header %}Inputs{% endblock header %}
+{% block body %}
+    <form action="/inputs?filepath={{filepath}}" method="post" enctype="multipart/form-data">
+        
+        <label for="target">Target:</label>
+         <select name="target" id="target" required>
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+
+        <label for="categorical_columns">Categorical Columns:</label>
+         <select name="categorical_columns" id="categorical_columns" multiple required>
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+
+        <label for="numeric_columns">Numeric Columns:</label>
+         <select name="numeric_columns" id="numeric_columns" multiple required>
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+
+        <label for="test_size">Test Boyutu (Test Size) (0 ile 1 arasında):</label>
+        <input type="text" name="test_size" id="test_size" value="0.2" required>
+        <br><br>
+        
+        <label for="random_state">Rastgelelik Durumu (Random State):</label>
+        <input type="number" name="random_state" id="random_state" value="42" required>
+        <br><br>
+        
+        <label for="shuffle">Karıştır (Shuffle):</label>
+        <select name="shuffle" id="shuffle">
+            <option value="True">True</option>
+            <option value="False">False</option>
+        </select>
+        <br><br>
+        
+        <label for="is_classification">Sınıflandırma mı? (Is Classification):</label>
+        <select name="is_classification" id="is_classification">
+            <option value="True">True</option>
+            <option value="False">False</option>
+        </select>
+        <br><br>
+
+        <label for="metric">Metric:</label>
+        <select id="metric" name="metric">
+            <!-- Metrikler burada dinamik olarak yüklenecek -->
+        </select>
+        <br><br>
+        
+        <input type="submit" value="Yükle">
+    </form>
+
+
+    <script>
+        // Metrikleri güncellemek için fonksiyon
+        function updateMetrics(is_classification) {
+            var metrics = is_classification === 'True' ? 
+                {
+                    "Accuracy": "accuracy_score",
+                    "ROC-AUC Score": "roc_auc_score",
+                    "Precision Score": "precision_score",
+                    "Recall Score": "recall_score"
+                } : 
+                {
+                    'MAE': "mean_absolute_error",
+                    'RMSE': "sqrt(mean_squared_error)",
+                    "R2 Score": "r2_score",
+                };
+            
+            // Metric dropdown'ını güncelle
+            $('#metric').empty(); // Önceki seçenekleri temizle
+            for (var key in metrics) {
+                $('#metric').append('<option value="' + metrics[key] + '">' + key + '</option>');
+            }
+        }
+
+        // Sayfa yüklendiğinde doğru metrikleri yükle
+        $(document).ready(function() {
+            updateMetrics($('#is_classification').val());
+
+            // Seçim değiştiğinde metrikleri güncelle
+            $('#is_classification').change(function() {
+                updateMetrics($(this).val());
+            });
+        });
+    </script>
+{% endblock body %}
