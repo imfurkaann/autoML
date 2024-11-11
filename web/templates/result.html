@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+{% block title %}Analysis Results{% endblock title %}
+{% block header %}Analysis Results{% endblock header %}
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-2 overflow-auto sticky-top sticky-offset border vh-100" style="border-right: 1px solid #000;">
+            <h3>Inputs</h3>
+            <p><strong>File: </strong>{{inputs["path"]}}</p>
+            <p><strong>Target: </strong>{{inputs["target"]}}</p>
+            <p><strong>Test Size:</strong> {{inputs["test_size"]}}</p>
+            <p><strong>Random State: </strong>{{inputs["random_state"]}}</p>
+            <p><strong>Shuffle: </strong>{{inputs["shuffle"]}}</p>
+            <p><strong>Is Classification: </strong>{{inputs["is_classification"]}}</p>
+            <p><strong>Categorical Columns: </strong>
+            <ul>
+                {% for categorical in inputs["categorical_columns"] %}
+                <li>{{categorical}}</li>
+                {% endfor %}
+            </ul>
+            </p>
+            <p><strong>Numeric Columns: </strong>
+            <ul>
+                {% for numeric in inputs["numeric_columns"] %}
+                <li>{{numeric}}</li>
+                {% endfor %}
+            </ul>
+            </p>
+
+            <p><a href="/start"><button class="btn btn-primary">Start EDA and Feature Engineering</button></a></p>
+        </div>
+        <div class="col-sm overflow-auto">
+<h2>Dataset Info</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    {% for column in columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                    <tr>
+                        {% for cell in row %}
+                            <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <br><br>
+
+<h2> Grafikler </h2>
+    <div class="row">
+        {% for file in charts %}
+        <div class="col-6 mb-3">
+            <a href="{{ url_for('static', filename='images/' + file) }}" data-lightbox="{{file}}" data-title="{{file}}"><img src="{{ url_for('static', filename='images/' + file) }}" alt="{{ file }}" height="400"></a>
+        </div>
+        {% endfor %}
+    </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock body %}
