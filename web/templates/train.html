@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
-{% block title %}Analysis Results{% endblock title %}
-{% block header %}Analysis Results{% endblock header %}
+{% block title %}Training{% endblock title %}
+{% block header %}Training{% endblock header %}
 {% block body %}
 <div class="container-fluid">
     <div class="row">
@@ -27,41 +27,34 @@
             </ul>
             </p>
 
-            <p><a href="/start"><button class="btn btn-primary">Start EDA and Feature Engineering</button></a></p>
         </div>
-        <div class="col-sm overflow-auto">
-<h2>Dataset Info</h2>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    {% for column in columns %}
-                        <th>{{ column }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in data %}
-                    <tr>
-                        {% for cell in row %}
-                            <td>{{ cell }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <div class="col-sm-10 overflow-auto">
+            <!--
+            {% for model in best_models  %}
+                <div class="card" style="width: 65rem;">
+                    <div class="card-header">
+                        <strong> Dataset: </strong> {{ model[0] }}
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong> Model: </strong> {{ model[1] }}</li>
+                        <li class="list-group-item"><strong> {{session["metric"]}}: </strong> {{ model[2] }}</li>
+                    </ul>
+                </div>
+                <br><br>
+            {% endfor %}
+        -->
 
-    <br><br>
-
-<h2> Grafikler </h2>
-    <div class="row">
-        {% for file in charts %}
-        <div class="col-6 mb-3">
-            <a href="{{ url_for('static', filename='images/Original_Dataset/' + file) }}" data-lightbox="{{file}}" data-title="{{file}}"><img src="{{ url_for('static', filename='images/Original_Dataset/' + file) }}" alt="{{ file }}" height="400"></a>
+        {% for key, group in grouped %}
+        <div class="card" style="width: 70rem;">
+            <div class="card-header"> <strong> {{ key }} </strong> </div>
+            <ul class="list-group list-group-flush">
+            {% for item in group %}
+                <li class="list-group-item"><strong> {{session["metric"]}} </strong> {{item[2]}} <strong> for Model </strong> {{item[1]}} </li>
+            {% endfor %}
+            </ul>
         </div>
+        <br><br>
         {% endfor %}
-    </div>
         </div>
     </div>
 </div>

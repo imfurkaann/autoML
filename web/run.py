@@ -9,6 +9,7 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from autoML import autoML, trainML, analysisDATASET
 import pymongo
+import itertools
 
 # Init
 app = Flask(__name__, template_folder="templates")
@@ -76,6 +77,16 @@ def inputs():
         metric = request.form.get('metric')
         categorical_columns = request.form.getlist('categorical_columns')
         numeric_columns = request.form.getlist('numeric_columns')
+
+        session["filepath"] = filepath
+        session["target"] = target
+        session["test_size"] = test_size
+        session["random_state"] = random_state
+        session["shuffle"] = shuffle
+        session["is_classification"] = is_classification
+        session["metric"] = metric
+        session["categorical_columns"] = categorical_columns
+        session["numeric_columns"] = numeric_columns
         
         ml2 = trainML(path=filepath, target=target, categorical_columns=categorical_columns, 
                  numeric_columns=numeric_columns, is_classification=is_classification, 
@@ -90,7 +101,7 @@ def inputs():
 
 @app.route('/result', methods=['GET'])
 def result():
-    files = os.listdir("database/charts")
+    files = os.listdir("database/charts/Original_Dataset")
     png_files = sorted([file for file in files if file.endswith('.png')])
     df_info = read_file(os.path.join(app.config["UPLOAD_PATH"], "df_info.csv"))
     data = df_info.head(1000).values.tolist()
@@ -101,16 +112,68 @@ def result():
 
 @app.route('/start', methods=['GET'])
 def start():
+    mongocollection = connect_db("Original_Dataset")
+    inputs = mongocollection.find_one()
+    ml = trainML(path=inputs["path"], target=inputs["target"], categorical_columns=inputs["categorical_columns"], 
+                 numeric_columns=inputs["numeric_columns"], is_classification=inputs["is_classification"], 
+                 test_size=inputs["test_size"], random_state=inputs["random_state"], shuffle=inputs["shuffle"], metric=session.get("metric"))
+    dummy_df = ml.dummy_df()
+    missing_data = ml.missing_data_fill(dummy_df)
+    outlier_data = ml.outliers(list(missing_data))
+    df_list = ml.all_datasets(missing_data, outlier_data)
+    # after_charts = ml.after_charts(df_list)
+    
     datasets = os.listdir("database/datasets")
     datas = []
     for dataset in datasets:
         df = read_file(os.path.join("database", "datasets", dataset))
         data = df.values.tolist()
         columns = df.columns.tolist()
-        datas.append({"name": dataset.replace("_", " ").removesuffix(".csv"), "data": data, "columns": columns})
+        try:
+            files = os.listdir("database/charts/"+dataset.removesuffix(".csv"))
+        except FileNotFoundError:
+            continue
+        charts = sorted([file for file in files if file.endswith(".png")])
+        datas.append({"dataset": dataset.removesuffix(".csv"), "name": dataset.replace("_", " ").removesuffix(".csv"), "data": data, "columns": columns, "charts": charts})
+
+    return render_template('start.html', datasets=datas, inputs=inputs)
+
+@app.route("/train", methods=["GET"])
+def train():
     mongocollection = connect_db("Original_Dataset")
     inputs = mongocollection.find_one()
-    return render_template('start.html', datasets=datas, inputs=inputs)
+    ml = trainML(path=inputs["path"], target=inputs["target"], categorical_columns=inputs["categorical_columns"], 
+                 numeric_columns=inputs["numeric_columns"], is_classification=inputs["is_classification"], 
+                 test_size=inputs["test_size"], random_state=inputs["random_state"], shuffle=inputs["shuffle"], metric=session["metric"])
+
+    client = pymongo.MongoClient("mongodb://localhost:27017/")  # MongoDB bağlantı URL'nizi girin
+    db = client["automl_database"]  # Veritabanı adınızı girin
+    # path değerlerini toplayacağımız liste
+    path_listesi = []
+    # Tüm koleksiyonları al
+    for collection_name in db.list_collection_names():
+        collection = db[collection_name]
+        # Koleksiyondaki tüm dökümanlarda path alanını çek
+        for doc in collection.find({}, {"path": 1}):  # Sadece path alanını alıyoruz
+            path_value = doc.get("path")
+            if path_value:  # Eğer path değeri varsa listeye ekle
+                path_listesi.append(path_value)
+
+    df_list = []
+    for df_path in path_listesi:
+        df = read_file(df_path)
+        df.name = df_path.rsplit("/", 1)[1].rsplit(".", 1)[0].replace("_", " ")
+        if df.name == "original dataset" or df.name == "original dataset2":
+            continue
+        df_list.append(df)
+
+    train_alg = ml.train_alg(df_list)
+    metrics = ml.metrics(train_alg)
+    best_model = ml.best_model(metrics)
+    best_model.sort(key= lambda x: x[0])
+    grouped = itertools.groupby(best_model, key=lambda x: x[0])
+    return render_template("train.html", inputs=inputs, best_models=best_model, grouped=grouped)
+
 
 @app.route('/static/images/<path:filename>')
 def serve_images(filename):

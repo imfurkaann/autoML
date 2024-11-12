@@ -65,15 +65,15 @@
         function updateMetrics(is_classification) {
             var metrics = is_classification === 'True' ? 
                 {
-                    "Accuracy": "accuracy_score",
-                    "ROC-AUC Score": "roc_auc_score",
-                    "Precision Score": "precision_score",
-                    "Recall Score": "recall_score"
+                    "Accuracy": "Accuracy",
+                    "ROC-AUC Score": "ROC-AUC Score",
+                    "Precision Score": "Precision Score",
+                    "Recall Score": "Recall Score"
                 } : 
                 {
-                    'MAE': "mean_absolute_error",
-                    'RMSE': "sqrt(mean_squared_error)",
-                    "R2 Score": "r2_score",
+                    'MAE': "MAE",
+                    'RMSE': "RMSE",
+                    "R2 Score": "R2 Score",
                 };
             
             // Metric dropdown'ını güncelle
