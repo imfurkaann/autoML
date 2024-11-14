@@ -3,8 +3,11 @@ from imports import *
 
 class autoML():
 
+<<<<<<< HEAD
     "aaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
+=======
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
     def __init__(self, path, target, categorical_columns, numeric_columns, is_classification, test_size, random_state, shuffle, metric):
         self.path = path
         self.target = target
@@ -69,6 +72,12 @@ class autoML():
     
     
 class analysisDATASET(autoML):
+<<<<<<< HEAD
+=======
+    
+    
+
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,6 +88,7 @@ class analysisDATASET(autoML):
         df_missing = pd.DataFrame(self.original_dataset.isnull().sum()).rename(columns={0:"Missing Values"})
         df_stats = pd.DataFrame(self.original_dataset.describe().T)
         df_info = pd.concat([df_unique, df_missing, df_stats], axis = 1)
+<<<<<<< HEAD
 
         return df_info
     
@@ -86,11 +96,27 @@ class analysisDATASET(autoML):
         
         charts_list = []
 
+=======
+        
+        df_info.to_csv("df_info.csv", index=True)
+
+        return df_info
+    
+
+    def before_charts(self):
+        new_dir = os.path.join(self.charts_dir, self.original_dataset.name.replace(" ", "_"))
+        os.makedirs(new_dir, exist_ok=True)
+
+        charts_list = []
+
+        # Update database to ensure charts array exists
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
         self.connect_db(self.original_dataset.name.replace(" ", "_")).update_one(
             {"dataset_name": self.original_dataset.name},
             {"$setOnInsert": {"charts": []}},
             upsert=True
         )
+<<<<<<< HEAD
     
 
         #target dist chart
@@ -145,6 +171,66 @@ class analysisDATASET(autoML):
         charts_list.append(missing_fig)
 
         return charts_list
+=======
+
+        # Target distribution chart
+        target_dist_fig, target_dist_ax = plt.subplots(figsize=(8, 6))
+        sns.countplot(x=self.target, data=self.original_dataset, ax=target_dist_ax)
+        target_dist_ax.set_title(f'{self.target} Değişkeninin Dağılımı')
+        target_dist_fig.savefig(f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Hedef_Değişken_Dağılımı.png")
+        self.connect_db(self.original_dataset.name.replace(' ', '_')).update_one({"dataset_name": self.original_dataset.name}, 
+                                                                                {"$push": {"charts": f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Hedef_Değişken_Dağılımı.png"}})
+        charts_list.append(target_dist_fig)
+        plt.close(target_dist_fig)  # Close to free memory
+
+        # Columns distribution charts
+        for col in self.original_dataset.columns:
+            if self.original_dataset[col].dtype != 'object':
+                columns_dist_fig, columns_dist_ax = plt.subplots(figsize=(8, 6))
+                sns.histplot(data=self.original_dataset[col], kde=True, ax=columns_dist_ax)
+                columns_dist_ax.set_title(f'{col} Değişkeninin Dağılımı')
+
+                columns_dist_fig.savefig(f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\{col}_Degiskeni_Dagilimi.png")
+                self.connect_db(self.original_dataset.name.replace(' ', '_')).update_one({"dataset_name": self.original_dataset.name}, 
+                                                                                        {"$push": {"charts": f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\{col}_Degiskeni_Dagilimi.png"}})
+                charts_list.append(columns_dist_fig)
+                plt.close(columns_dist_fig)  # Close to free memory
+
+        # Correlation matrix
+        corr_fig, corr_ax = plt.subplots(figsize=(10, 8))
+        sns.heatmap(data=self.original_dataset.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=corr_ax)
+        corr_ax.set_title("Korelasyon Matrisi")
+        corr_fig.savefig(f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Korelasyon_Matrisi.png")
+        self.connect_db(self.original_dataset.name.replace(' ', '_')).update_one({"dataset_name": self.original_dataset.name}, 
+                                                                                {"$push": {"charts": f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Korelasyon_Matrisi.png"}})
+        charts_list.append(corr_fig)
+        plt.close(corr_fig)  # Close to free memory
+
+        # Outlier charts
+        for col in self.original_dataset.columns:
+            if self.original_dataset[col].dtype != 'object':
+                outlier_fig, outlier_ax = plt.subplots(figsize=(8, 6))
+                sns.boxplot(x=self.original_dataset[col], ax=outlier_ax)
+                outlier_ax.set_title(f'{col} Değişkeninde Aykırı Değerler')
+                outlier_fig.savefig(f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\{col}_Aykırı_Değerler.png")
+                self.connect_db(self.original_dataset.name.replace(' ', '_')).update_one({"dataset_name": self.original_dataset.name}, 
+                                                                                        {"$push": {"charts": f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\{col}_Aykırı_Değerler.png"}})
+                charts_list.append(outlier_fig)
+                plt.close(outlier_fig)  # Close to free memory
+
+        # Missing data chart
+        missing_fig, missing_ax = plt.subplots(figsize=(8, 6)) 
+        msno.bar(self.original_dataset, ax=missing_ax)
+        missing_ax.set_title('Eksik Verilerin Bar Grafiği')
+        missing_fig.savefig(f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Eskik_Veri_Bar_Grafiği.png")
+        self.connect_db(self.original_dataset.name.replace(' ', '_')).update_one({"dataset_name": self.original_dataset.name}, 
+                                                                                {"$push": {"charts": f"{self.charts_dir}\\{self.original_dataset.name.replace(' ', '_')}\\Eskik_Veri_Bar_Grafiği.png"}})
+        charts_list.append(missing_fig)
+        plt.close(missing_fig)  # Close to free memory
+
+        return charts_list
+
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
         
 
 class trainML(autoML):
@@ -156,6 +242,7 @@ class trainML(autoML):
         self.database_files()
 
         existing_datasets = self.connect_db(self.original_dataset.name.replace(" ", "_")).distinct("dataset_name")
+<<<<<<< HEAD
 
         if self.original_dataset.name not in existing_datasets:  
                 db_dataset = self.original_dataset.to_dict("records")
@@ -166,6 +253,43 @@ class trainML(autoML):
                     "categorical_columns": self.categorical_columns, "numeric_columns": self.numeric_columns
                 }
                 self.connect_db(self.original_dataset.name.replace(" ", "_")).insert_one(data)
+=======
+        
+        if self.original_dataset.name not in existing_datasets:
+            db_dataset = self.original_dataset.to_dict("records")
+            data = {
+                "dataset_name": self.original_dataset.name, 
+                "path": f"{self.datasets_dir}\\original_dataset.csv", 
+                "target": self.target, 
+                "test_size": self.test_size,
+                "random_state": self.random_state, 
+                "shuffle": self.shuffle, 
+                "is_classification": self.is_classification, 
+                "categorical_columns": self.categorical_columns, 
+                "numeric_columns": self.numeric_columns
+            }
+            
+            self.connect_db(self.original_dataset.name.replace(" ", "_")).insert_one(data)
+        else:
+            data = {
+                "dataset_name": self.original_dataset.name, 
+                "path": f"{self.datasets_dir}\\original_dataset.csv", 
+                "target": self.target, 
+                "test_size": self.test_size,
+                "random_state": self.random_state, 
+                "shuffle": self.shuffle, 
+                "is_classification": self.is_classification, 
+                "categorical_columns": self.categorical_columns, 
+                "numeric_columns": self.numeric_columns
+            }
+            
+            result = self.connect_db(self.original_dataset.name.replace(" ", "_")).update_one(
+                {"dataset_name": self.original_dataset.name},  
+                {"$set": data},  
+                upsert=True  
+            )
+
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
     
     def dummy_df(self):
 
@@ -254,6 +378,7 @@ class trainML(autoML):
         return df_list
 
     def after_charts(self, dataset_list):
+<<<<<<< HEAD
     
         for df in dataset_list:
 
@@ -296,6 +421,74 @@ class trainML(autoML):
                 self.db.insert_one({"charts": "smallimage.jpg", "data": encoded_image})
 
         return target_dist_fig, dist_charts, corr_fig, outlier_charts, missing_fig
+=======
+        for df in dataset_list:
+            new_dir = os.path.join(self.charts_dir, df.name.replace(" ", "_"))
+            os.makedirs(new_dir, exist_ok=True)
+
+            charts_list = []
+
+            # Update database to ensure charts array exists
+            self.connect_db(df.name.replace(" ", "_")).update_one(
+                {"dataset_name": df.name},
+                {"$setOnInsert": {"charts": []}},
+                upsert=True
+            )
+
+            # Target distribution chart
+            target_dist_fig, target_dist_ax = plt.subplots(figsize=(8, 6))
+            sns.countplot(x=self.target, data=df, ax=target_dist_ax)
+            target_dist_ax.set_title(f'{self.target} Değişkeninin Dağılımı')
+            target_dist_fig.savefig(f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Hedef_Değişken_Dağılımı.png")
+            self.connect_db(df.name.replace(" ", "_")).update_one({"dataset_name":df.name},
+                                                                    {"$push":{"charts":f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Hedef_Değişken_Dağılımı.png"}})
+            charts_list.append(target_dist_fig)
+            plt.close(target_dist_fig)  # Close to free memory
+
+            # Columns distribution charts
+            for col in df.columns:
+                if df[col].dtype != 'object':
+                    columns_dist_fig, columns_dist_ax = plt.subplots(figsize=(8, 5))
+                    sns.histplot(data=df[col], kde=True, ax=columns_dist_ax)
+                    columns_dist_ax.set_title(f'{col} Değişkeninin Dağılımı')
+                    columns_dist_fig.savefig(f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\{col}_Degiskeni_Dagilimi.png")
+                    self.connect_db(df.name.replace(" ", "_")).update_one({"dataset_name":df.name},
+                                                                            {"$push":{"charts":f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\{col}_Degiskeni_Dagilimi.png"}})
+                    charts_list.append(columns_dist_fig)
+                    plt.close(columns_dist_fig)  # Close to free memory
+
+            # Correlation matrix
+            corr_fig, corr_ax = plt.subplots(figsize=(10, 8))
+            sns.heatmap(data=df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=corr_ax)
+            corr_ax.set_title("Korelasyon Matrisi")
+            corr_fig.savefig(f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Korelasyon_Matrisi.png")
+            self.connect_db(df.name.replace(" ", "_")).update_one({"dataset_name":df.name},
+                                                                    {"$push":{"charts":f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Korelasyon_Matrisi.png"}})
+            charts_list.append(corr_fig)
+            plt.close(corr_fig)  # Close to free memory
+
+            # Outlier charts
+            for col in df.columns:
+                if df[col].dtype != 'object':
+                    outlier_fig, outlier_ax = plt.subplots(figsize=(8, 6))
+                    sns.boxplot(x=df[col], ax=outlier_ax)
+                    outlier_ax.set_title(f'{col} Değişkeninde Aykırı Değerler')
+                    outlier_fig.savefig(f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\{col}_Aykırı_Değerler.png")
+                    self.connect_db(df.name.replace(" ", "_")).update_one({"dataset_name":df.name},
+                                                                            {"$push":{"charts":f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\{col}_Aykırı_Değerler.png"}})
+                    charts_list.append(outlier_fig)
+                    plt.close(outlier_fig)  # Close to free memory
+
+            # Missing data chart
+            missing_fig, missing_ax = plt.subplots(figsize=(8, 5)) 
+            msno.bar(df, ax=missing_ax)
+            missing_ax.set_title('Eksik Verilerin Bar Grafiği')
+            missing_fig.savefig(f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Eskik_Veri_Bar_Grafiği.png")
+            self.connect_db(df.name.replace(" ", "_")).update_one({"dataset_name":df.name},
+                                                                    {"$push":{"charts":f"{self.charts_dir}\\{df.name.replace(' ', '_')}\\Eskik_Veri_Bar_Grafiği.png"}})
+            charts_list.append(missing_fig)
+            plt.close(missing_fig)  # Close to free memory
+>>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
 
 
     def train_test_splitt(self, df):
