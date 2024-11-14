@@ -28,10 +28,7 @@ import pymongo
 import warnings
 warnings.filterwarnings("ignore")
 import re
-<<<<<<< HEAD
 import bson.binary
-=======
->>>>>>> 18eb53e (app.py ve autoML.py dosyaları güncellendi)
 import io
 import base64
 import uuid

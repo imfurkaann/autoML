@@ -82,7 +82,8 @@ class analysisDATASET(autoML):
         df_stats = pd.DataFrame(self.original_dataset.describe().T)
         df_info = pd.concat([df_unique, df_missing, df_stats], axis = 1)
         
-        df_info.to_csv("df_info.csv", index=True)
+        df_dummy_path = os.path.join(self.datasets_dir, "dummy_df.csv")
+        df_info.to_csv(df_dummy_path, index=True)
 
         return df_info
     
