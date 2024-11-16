@@ -21,7 +21,7 @@ class autoML():
         self.client = pymongo.MongoClient("mongodb://localhost:27017/")
         self.db = self.client["automl_database"]
 
-        self.database_dir, self.datasets_dir, self.charts_dir = self.database_files()
+        self.database_dir, self.datasets_dir, self.charts_dir, self.helpful_datasets_dir = self.database_files()
 
     def connect_db(self, collection_name):
          
@@ -46,15 +46,19 @@ class autoML():
 
         database_dir = os.path.join("database")
         datasets_dir = os.path.join(database_dir, "datasets")
+        helpful_datasets_dir = os.path.join(database_dir, "helpful_datasets")
         charts_dir = os.path.join(database_dir, "charts")
         os.makedirs(datasets_dir, exist_ok=True)
         os.makedirs(datasets_dir, exist_ok=True)
+        os.makedirs(helpful_datasets_dir, exist_ok=True)
         os.makedirs(charts_dir, exist_ok=True)
 
-        new_file_path = os.path.join(datasets_dir, "original_dataset.csv")
-        shutil.copy(self.path, new_file_path)
+        new_file_path = os.path.join(helpful_datasets_dir, "original_dataset.csv")
+        
+        if not os.path.exists(new_file_path):
+            shutil.copy(self.path, new_file_path)
 
-        return database_dir, datasets_dir, charts_dir
+        return database_dir, datasets_dir, charts_dir, helpful_datasets_dir
     
     def columns(self):
 
@@ -63,15 +67,10 @@ class autoML():
         if self.numeric_columns is None:
             self.numeric_columns = [column for column in self.original_dataset.columns if is_numeric_dtype(self.original_dataset[column])]
         
-        # Düzeltilecek database kaydetme kısmı
         return self.categorical_columns, self.numeric_columns
-    
-    
+ 
 class analysisDATASET(autoML):
-    
-    
 
-        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -82,13 +81,15 @@ class analysisDATASET(autoML):
         df_stats = pd.DataFrame(self.original_dataset.describe().T)
         df_info = pd.concat([df_unique, df_missing, df_stats], axis = 1)
         
-        df_dummy_path = os.path.join(self.datasets_dir, "dummy_df.csv")
-        df_info.to_csv(df_dummy_path, index=True)
+        df_info_path = os.path.join(self.helpful_datasets_dir, "df_info.csv")
+        df_info.to_csv(df_info_path, index=True)
 
         return df_info
-    
 
     def before_charts(self):
+        
+        plt.switch_backend('agg')
+
         charts_dir = os.path.join(self.charts_dir, self.original_dataset.name.replace(" ", "_"))
         os.makedirs(charts_dir, exist_ok=True)
 
@@ -161,8 +162,6 @@ class analysisDATASET(autoML):
 
         return charts_list
 
-        
-
 class trainML(autoML):
 
     def __init__(self, *args, **kwargs):
@@ -177,7 +176,7 @@ class trainML(autoML):
             db_dataset = self.original_dataset.to_dict("records")
             data = {
                 "dataset_name": self.original_dataset.name, 
-                "path": f"{self.datasets_dir}\\original_dataset.csv", 
+                "path": f"{self.helpful_datasets_dir}\\original_dataset.csv", 
                 "target": self.target, 
                 "test_size": self.test_size,
                 "random_state": self.random_state, 
@@ -191,7 +190,7 @@ class trainML(autoML):
         else:
             data = {
                 "dataset_name": self.original_dataset.name, 
-                "path": f"{self.datasets_dir}\\original_dataset.csv", 
+                "path": f"{self.helpful_datasets_dir}\\original_dataset.csv", 
                 "target": self.target, 
                 "test_size": self.test_size,
                 "random_state": self.random_state, 
@@ -207,11 +206,10 @@ class trainML(autoML):
                 upsert=True  
             )
 
-    
     def dummy_df(self):
 
         df_dummy = pd.get_dummies(self.original_dataset, columns=self.categorical_columns)
-        df_dummy.to_csv(f"{self.datasets_dir}\\df_original_dummy.csv", index=False)
+        df_dummy.to_csv(f"{self.helpful_datasets_dir}\\df_original_dummy.csv", index=False)
 
         self.connect_db(self.original_dataset.name.replace(" ", "_")).update_one({"dataset_name":self.original_dataset.name}, 
                                                                         {"$set":{"dataset_dummy_path":f"{self.datasets_dir}\\df_original_dummy.csv"}})
@@ -295,6 +293,9 @@ class trainML(autoML):
         return df_list
 
     def after_charts(self, dataset_list):
+        
+        plt.switch_backend('agg')
+
         for df in dataset_list:
             
             charts_path = os.path.join(self.charts_dir, df.name.replace(" ", "_"))
