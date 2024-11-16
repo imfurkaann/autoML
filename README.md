@@ -12,6 +12,7 @@ This project is designed to automate the machine learning pipeline, from data lo
 - **Model Training**: Automatically split the data, select algorithms, and train models.
 - **Evaluation**: Model performance is evaluated using various metrics such as accuracy, precision, recall, and F1-score.
 - **Easy Setup**: Simple configuration for seamless data input and model execution.
+- **MongoDB** : Preferred because it is fast as database. [Install MongoDB](https://www.mongodb.com/docs/manual/installation/)
 
 ## Requirements
 - Python 3.xx
