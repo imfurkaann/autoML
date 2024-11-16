@@ -1,13 +1,12 @@
 # Imports
 from flask import Flask
-from flask import render_template, request, jsonify, redirect, url_for, flash, session, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
+from flask import render_template, request, redirect, url_for, session, send_from_directory
 import os
 import sys
 import pandas as pd
 #sys.path.append('..')
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from autoML import autoML, trainML, analysisDATASET
+from autoML import trainML, analysisDATASET
 import pymongo
 import itertools
 
@@ -15,14 +14,10 @@ import itertools
 app = Flask(__name__, template_folder="templates")
 
 app.config["SECRET_KEY"] = "supersecretkey"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.sqlite3"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_EXTENSIONS"] = ["xlsx", "csv"]
 app.config["UPLOAD_PATH"] = "datasets"
 
 os.makedirs(app.config["UPLOAD_PATH"], exist_ok=True)
-
-db = SQLAlchemy(app)
 
 # Misc
 def read_file(path):
@@ -35,7 +30,7 @@ def read_file(path):
     return original_dataset
 
 def connect_db(collection_name, db_name="automl_database"):
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    client = pymongo.MongoClient("mongodb://mongo:27017/")
     db = client[db_name]
     collection = db[collection_name]
     return collection
@@ -121,7 +116,7 @@ def start():
     missing_data = ml.missing_data_fill(dummy_df)
     outlier_data = ml.outliers(list(missing_data))
     df_list = ml.all_datasets(missing_data, outlier_data)
-    # after_charts = ml.after_charts(df_list)
+    after_charts = ml.after_charts(df_list)
     
     datasets = os.listdir("database/datasets")
     datas = []
@@ -146,7 +141,7 @@ def train():
                  numeric_columns=inputs["numeric_columns"], is_classification=inputs["is_classification"], 
                  test_size=inputs["test_size"], random_state=inputs["random_state"], shuffle=inputs["shuffle"], metric=session["metric"])
 
-    client = pymongo.MongoClient("mongodb://localhost:27017/")  # MongoDB bağlantı URL'nizi girin
+    client = pymongo.MongoClient("mongodb://mongo:27017/")  # MongoDB bağlantı URL'nizi girin
     db = client["automl_database"]  # Veritabanı adınızı girin
     # path değerlerini toplayacağımız liste
     path_listesi = []
