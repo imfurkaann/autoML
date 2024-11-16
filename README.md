@@ -33,11 +33,15 @@ pip install -r requirements.txt
 cd web
 python run.py
 ```
-
 ## Without Using Web Interface
 - Open app.py
 - Write the required variables and then
 - ```bash
   python app.py
-  ``` 
+  ```
+
+ ## Contributing
+ If you'd like to contribute to the project, feel free to fork the repository and submit pull requests. Your contributions are welcome!
+
+
 
